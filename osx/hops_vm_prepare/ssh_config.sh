@@ -22,38 +22,52 @@ if [ ! -f ${EXEC_FILE} ]; then
 fi
 
 . ${PARAM_FILE}
-
 #save old config
 cp ${SSH_CONFIG_FILE} ${SSH_CONFIG_FILE}_save
 scp ${VM_SERVER_ALIAS}:${VM_DIR}/Vagrantfile .
-#ssh port
-SSH_PORT=$(ggrep -Po '{\K[^}]*' Vagrantfile | grep 22 | cut -d':' -f3 | cut -d'>' -f2)
-#delete previous ssh entry
-SSH_ENTRY=$(cat ${SSH_CONFIG_FILE} | ggrep -n "Host ${SSH_ALIAS}" | cut -d':' -f1 | wc -l)
-if [ ${SSH_ENTRY} == 2 ]; then
-  SSH_BEGIN=$(cat ${SSH_CONFIG_FILE} | ggrep -n "Host ${SSH_ALIAS}" | cut -d':' -f1 | gsed -n 1p)
-  SSH_END=$(cat ${SSH_CONFIG_FILE} | ggrep -n "Host ${SSH_ALIAS}" | cut -d':' -f1 | gsed -n 2p)
-  gsed -i "${SSH_BEGIN},${SSH_END}d" ${SSH_CONFIG_FILE}
-  echo "Old ${SSH_ALIAS} deleted from ${SSH_CONFIG_FILE}"
-elif [ ${SSH_ENTRY} == 0 ]; then
-  echo "No ${SSH_ALIAS} entry detected in ${SSH_CONFIG_FILE}"
-else
-  echo "incomplete ${SSH_ALIAS} - please cleanup manually ${SSH_CONFIG_FILE} before re-running this script"
-  exit 1
-fi
-#add new ssh entry
-echo "Host ${SSH_ALIAS}" >> ${SSH_CONFIG_FILE}
-echo "  Hostname ${VM_SERVER}" >> ${SSH_CONFIG_FILE}
-echo "  User ${VM_USER}" >> ${SSH_CONFIG_FILE}
-echo "  ProxyJump ${VM_PROXY}" >> ${SSH_CONFIG_FILE}
-echo "  Port ${SSH_PORT}" >> ${SSH_CONFIG_FILE}
-echo "#End Host ${SSH_ALIAS}" >> ${SSH_CONFIG_FILE}
-echo "new ${SSH_ALIAS} added to your ${SSH_CONFIG_FILE}"
+#sed -e 's/^[[:space:]]*//' - removes leading spaces
+VM_HOSTS=$(ggrep 'guest: 22,' Vagrantfile)
+while read -r line; do
+  VM_HOST=$(echo ${line} | gsed -e 's/^[[:space:]]*//' | cut -d' ' -f1 | cut -d'.' -f1)
+  if [ ! ${SSH_ALIASES[${VM_HOST}]} ] ; then
+    echo "there is no alias defined for vm host ${VM_HOST}"
+    exit 1
+  fi
+  SSH_ALIAS=${SSH_ALIASES[${VM_HOST}]}
+  #ssh port
+  echo $line
+  SSH_PORT=$(echo ${line} | cut -d':' -f4 | cut -d',' -f1)
+  echo ${VM_HOST} ${SSH_ALIAS} ssh ${SSH_PORT}
+  #delete previous ssh entry
+  SSH_ENTRY=$(cat ${SSH_CONFIG_FILE} | ggrep -n "Host ${SSH_ALIAS}" | cut -d':' -f1 | wc -l)
+  if [ ${SSH_ENTRY} == 2 ]; then
+    SSH_BEGIN=$(cat ${SSH_CONFIG_FILE} | ggrep -n "Host ${SSH_ALIAS}" | cut -d':' -f1 | gsed -n 1p)
+    SSH_END=$(cat ${SSH_CONFIG_FILE} | ggrep -n "Host ${SSH_ALIAS}" | cut -d':' -f1 | gsed -n 2p)
+    gsed -i "${SSH_BEGIN},${SSH_END}d" ${SSH_CONFIG_FILE}
+    echo "Old ${SSH_ALIAS} deleted from ${SSH_CONFIG_FILE}"
+  elif [ ${SSH_ENTRY} == 0 ]; then
+    echo "No ${SSH_ALIAS} entry detected in ${SSH_CONFIG_FILE}"
+  else
+    echo "incomplete ${SSH_ALIAS} - please cleanup manually ${SSH_CONFIG_FILE} before re-running this script"
+    exit 1
+  fi
+  #add new ssh entry
+  echo "Host ${SSH_ALIAS}" >> ${SSH_CONFIG_FILE}
+  echo "  Hostname ${VM_SERVER}" >> ${SSH_CONFIG_FILE}
+  echo "  User ${VM_USER}" >> ${SSH_CONFIG_FILE}
+  echo "  ProxyJump ${VM_PROXY}" >> ${SSH_CONFIG_FILE}
+  echo "  Port ${SSH_PORT}" >> ${SSH_CONFIG_FILE}
+  echo "#End Host ${SSH_ALIAS}" >> ${SSH_CONFIG_FILE}
+  echo "new ${SSH_ALIAS} added to your ${SSH_CONFIG_FILE}"
+done <<< "${VM_HOSTS}"
 
 #pfwd ports
 declare -A VM_PFWD_PORTS
-for port in ${VM_PORTS[@]}; do 
-  PFWD_PORTS[$port]=$(ggrep -Po '{\K[^}]*' Vagrantfile | grep ${port} | cut -d':' -f3 | cut -d'>' -f2)
+for PORT in ${VM_PORTS[@]}; do
+  LINE=$(ggrep "{:guest=>${PORT}" Vagrantfile)
+  echo ${LINE}
+  PFWD_PORTS[${PORT}]=$( echo ${LINE} | cut -d':' -f4 | cut -d'>' -f2 | cut -d '}' -f1)
+  echo "pfwd ${PORT} ${PFWD_PORTS[${PORT}]}"
 done
 
 #delete previous pfwd entry
