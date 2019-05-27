@@ -31,7 +31,6 @@ while read -r line; do
   VM_HOST=$(echo ${line} | sed -e 's/^[[:space:]]*//' | cut -d' ' -f1 | cut -d'.' -f1)
   if [ ! ${SSH_ALIASES[${VM_HOST}]} ] ; then
     echo "there is no alias defined for vm host ${VM_HOST}"
-    exit 1
   fi
   SSH_ALIAS=${SSH_ALIASES[${VM_HOST}]}
   #ssh port
@@ -51,12 +50,13 @@ while read -r line; do
     echo "incomplete ${SSH_ALIAS} - please cleanup manually ${SSH_CONFIG_FILE} before re-running this script"
     exit 1
   fi
-  #add new ssh entry
+  #add new ssh entry - with vagrant insecure key
   echo "Host ${SSH_ALIAS}" >> ${SSH_CONFIG_FILE}
   echo "  Hostname ${VM_SERVER}" >> ${SSH_CONFIG_FILE}
   echo "  User ${VM_USER}" >> ${SSH_CONFIG_FILE}
   echo "  ProxyJump ${VM_PROXY}" >> ${SSH_CONFIG_FILE}
   echo "  Port ${SSH_PORT}" >> ${SSH_CONFIG_FILE}
+  echo "  IdentityFile ${VM_INSECURE_CERT}" >> ${SSH_CONFIG_FILE}
   echo "#End Host ${SSH_ALIAS}" >> ${SSH_CONFIG_FILE}
   echo "new ${SSH_ALIAS} added to your ${SSH_CONFIG_FILE}"
 done <<< "${VM_HOSTS}"

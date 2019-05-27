@@ -22,6 +22,8 @@ VM_SERVER_USER=aaor
 #Proxy for BBC machines - used in pfwd config entry. You should configure this proxy beforehand
 VM_PROXY=aaor_bbc1
 #User in ssh proxy entry - You will be sshed as this user in your vm.
-VM_USER=root
+VM_USER=vagrant
+#The vagrant insecure cert - location on local machine
+VM_INSECURE_CERT=/Users/Alex/Documents/_Work/Code/alex-hopsworks/vagrant_key/insecure_private_key
 #Port that you want to have port forwarded to your vm.
 VM_PORTS=(3306 9090 8181 4848)
