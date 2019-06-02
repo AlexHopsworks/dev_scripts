@@ -37,11 +37,34 @@ while read -r line; do
   echo $line
   SSH_PORT=$(echo ${line} | cut -d':' -f4 | cut -d',' -f1)
   echo ${VM_HOST} ${SSH_ALIAS} ssh ${SSH_PORT}
-  #delete previous ssh entry
-  SSH_ENTRY=$(cat ${SSH_CONFIG_FILE} | ggrep -n "Host ${SSH_ALIAS}" | cut -d':' -f1 | wc -l)
+  #delete previous ssh vagrant entry
+  SSH_ENTRY=$(cat ${SSH_CONFIG_FILE} | ggrep -n "Host ${SSH_ALIAS}_vagrant" | cut -d':' -f1 | wc -l)
   if [ ${SSH_ENTRY} == 2 ]; then
-    SSH_BEGIN=$(cat ${SSH_CONFIG_FILE} | ggrep -n "Host ${SSH_ALIAS}" | cut -d':' -f1 | gsed -n 1p)
-    SSH_END=$(cat ${SSH_CONFIG_FILE} | ggrep -n "Host ${SSH_ALIAS}" | cut -d':' -f1 | gsed -n 2p)
+    SSH_BEGIN=$(cat ${SSH_CONFIG_FILE} | ggrep -n "Host ${SSH_ALIAS}_vagrant" | cut -d':' -f1 | gsed -n 1p)
+    SSH_END=$(cat ${SSH_CONFIG_FILE} | ggrep -n "Host ${SSH_ALIAS}_vagrant" | cut -d':' -f1 | gsed -n 2p)
+    gsed -i "${SSH_BEGIN},${SSH_END}d" ${SSH_CONFIG_FILE}
+    echo "Old ${SSH_ALIAS}_vagrant deleted from ${SSH_CONFIG_FILE}"
+  elif [ ${SSH_ENTRY} == 0 ]; then
+    echo "No ${SSH_ALIAS}_vagrant entry detected in ${SSH_CONFIG_FILE}"
+  else
+    echo "incomplete ${SSH_ALIAS}_vagrant - please cleanup manually ${SSH_CONFIG_FILE} before re-running this script"
+    exit 1
+  fi
+  #add new ssh entry - with vagrant insecure key
+  echo "Host ${SSH_ALIAS}_vagrant" >> ${SSH_CONFIG_FILE}
+  echo "  Hostname ${VM_SERVER}" >> ${SSH_CONFIG_FILE}
+  echo "  User vagrant" >> ${SSH_CONFIG_FILE}
+  echo "  ProxyJump ${VM_PROXY}" >> ${SSH_CONFIG_FILE}
+  echo "  Port ${SSH_PORT}" >> ${SSH_CONFIG_FILE}
+  echo "  IdentityFile ${VM_INSECURE_CERT}" >> ${SSH_CONFIG_FILE}
+  echo "#End Host ${SSH_ALIAS}_vagrant" >> ${SSH_CONFIG_FILE}
+  echo "new ${SSH_ALIAS}_vagrant added to your ${SSH_CONFIG_FILE}"
+
+  #delete previous ssh user entry
+  SSH_ENTRY=$(cat ${SSH_CONFIG_FILE} | ggrep -n "Host ${SSH_ALIAS} " | cut -d':' -f1 | wc -l)
+  if [ ${SSH_ENTRY} == 2 ]; then
+    SSH_BEGIN=$(cat ${SSH_CONFIG_FILE} | ggrep -n "Host ${SSH_ALIAS} " | cut -d':' -f1 | gsed -n 1p)
+    SSH_END=$(cat ${SSH_CONFIG_FILE} | ggrep -n "Host ${SSH_ALIAS} " | cut -d':' -f1 | gsed -n 2p)
     gsed -i "${SSH_BEGIN},${SSH_END}d" ${SSH_CONFIG_FILE}
     echo "Old ${SSH_ALIAS} deleted from ${SSH_CONFIG_FILE}"
   elif [ ${SSH_ENTRY} == 0 ]; then
@@ -50,14 +73,13 @@ while read -r line; do
     echo "incomplete ${SSH_ALIAS} - please cleanup manually ${SSH_CONFIG_FILE} before re-running this script"
     exit 1
   fi
-  #add new ssh entry - with vagrant insecure key
-  echo "Host ${SSH_ALIAS}" >> ${SSH_CONFIG_FILE}
+  #add new ssh user entry - with own key
+  echo "Host ${SSH_ALIAS} " >> ${SSH_CONFIG_FILE}
   echo "  Hostname ${VM_SERVER}" >> ${SSH_CONFIG_FILE}
   echo "  User ${VM_USER}" >> ${SSH_CONFIG_FILE}
   echo "  ProxyJump ${VM_PROXY}" >> ${SSH_CONFIG_FILE}
   echo "  Port ${SSH_PORT}" >> ${SSH_CONFIG_FILE}
-  echo "  IdentityFile ${VM_INSECURE_CERT}" >> ${SSH_CONFIG_FILE}
-  echo "#End Host ${SSH_ALIAS}" >> ${SSH_CONFIG_FILE}
+  echo "#End Host ${SSH_ALIAS} " >> ${SSH_CONFIG_FILE}
   echo "new ${SSH_ALIAS} added to your ${SSH_CONFIG_FILE}"
 done <<< "${VM_HOSTS}"
 

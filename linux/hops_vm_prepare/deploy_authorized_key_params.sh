@@ -1,7 +1,7 @@
-#!/usr/local/bin/bash
+#!/bin/bash
 #key name - key file
 declare -A VM_KEYS 
-VM_KEYS[snurran]=/Users/Alex/Documents/_Work/Code/alex-hopsworks/snurran_certs/id_rsa.pub
+VM_KEYS[work]=~/.ssh/id_rsa.pub
 #vm alias - vm user
 #vm alias as defined in the ssh config 
 #vm user - the user on the vm that the key should be installed on
