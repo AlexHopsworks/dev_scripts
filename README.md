@@ -1,5 +1,6 @@
 ## HOPS VM PREPARE
-1. hops_vm_prepare/ssh_config.sh script
+### SSH CONFIG
+hops_vm_prepare/ssh_config.sh script
 
 This config script inserts three entries into your .ssh/config file:
   * SSH_ALIAS - allows you to ssh directly in the vm with your own key to the set user
@@ -52,3 +53,13 @@ Running this script multiple times will regenerate this entries in your ssh conf
   * VM_DIR - the location of the vm chef dir on the server
   
 Check the ssh_config_params.sh for full parameters.
+
+### DEPLOY AUTHORIZED KEY
+hops_vm_prepare/deploy_authorize_key.sh script
+
+This script deploys the set public key on the vm for the specified user - in its authorized_keys file
+
+### DEPLOY PRIVATE KEY
+hops_vm_prepare/deploy_private_key.sh script
+
+This script deplots the set private key on the vm for the specified user - such that you can later ssh into other machines from that vm.
