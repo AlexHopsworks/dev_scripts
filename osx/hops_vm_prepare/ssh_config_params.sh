@@ -13,7 +13,7 @@ SSH_ALIASES[config]=run_notls
 # BBC machines are not directly accessible so we typically access them by proxies.
 VM_SERVER_ALIAS=aaor_bbc5
 # VM Chef Dir on VM_SERVER_ALIAS
-VM_DIR=/home/aaor/new_prov
+VM_DIR=/home/aaor/prov-notls
 #VM_DIR=/home/aaor/tls_prov
 #Server running your vm - used as Host in the ssh config entry
 VM_SERVER=bbc5.sics.se

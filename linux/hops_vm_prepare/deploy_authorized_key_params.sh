@@ -8,4 +8,4 @@ VM_KEYS[work]=~/.ssh/id_rsa.pub
 #the alias might be configured to ssh as a different user than the one that gets the keys installed
 #if the users are not the same, make sure the login user can impersonate the other user
 declare -A VM_USERS 
-VM_USERS[run_notls]=root
+VM_USERS[run_notls_vagrant]=root
